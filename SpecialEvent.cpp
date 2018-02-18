@@ -77,13 +77,7 @@ Option<CAnimalRef> SpecialEvent::RandomSickAnimal()
 
 Option<CAnimalRef> SpecialEvent::RandomAdultAnimal()
 {
-  std::vector<CAnimalRef> adult_animals =
-      zoo_.AdultAnimals();
-  auto fwd_it = std::remove_if(adult_animals.begin(), adult_animals.end(),
-      [](CAnimalRef &a) {
-          return !a.get().IsAdult();
-      });
-  adult_animals.erase(fwd_it, adult_animals.end());
+  std::vector<CAnimalRef> adult_animals = zoo_.AdultAnimals();
   return ChooseRandomAnimal(adult_animals);
 }
 
