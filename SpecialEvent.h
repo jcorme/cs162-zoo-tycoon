@@ -20,8 +20,6 @@ enum class SpecialEventType
 
 class SpecialEvent
 {
-  friend std::ostream &operator<<(std::ostream &os, const SpecialEvent &s);
-
   public:
     SpecialEvent(const Zoo &zoo, SpecialEventType t);
     explicit SpecialEvent(const Zoo &zoo);
@@ -64,8 +62,6 @@ class SpecialEvent
     void SetValueBasedOnEvent();
     unsigned RandomBonusRevenue();
 };
-
-std::ostream &operator<<(std::ostream &os, const SpecialEvent &s);
 
 
 #endif //ZOO_TYCOON_SPECIALEVENT_H

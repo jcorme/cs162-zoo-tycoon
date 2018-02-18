@@ -151,8 +151,3 @@ unsigned SpecialEvent::RandomBonusRevenue()
   return uni(rng_engine_);
 }
 
-std::ostream &operator<<(std::ostream &os, const SpecialEvent &s)
-{
-  os << "TO BE IMPLEMENTED." << std::endl;
-  return os;
-}
