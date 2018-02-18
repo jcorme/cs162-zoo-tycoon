@@ -14,11 +14,16 @@
 template <class T>
 class MenuPrompt
 {
-//  static_assert(
-      // Enum classes can't be implicitly converted to an int, while
-      // regular enums can.
-//      (std::is_enum<T>::value && !std::is_convertible<T, int>::value),
-//      "An enum class is required to use the MenuPrompt.");
+    // This doesn't actually work. There's no clean/sane way to check that
+    // an explicit specialization of ActionString, with a Strings member,
+    // exists in C++11. The static assertion doesn't technically fail, but the
+    // compiler will still throw an error if no ActionString specialization for
+    // T exists because ActionString<T>, and consequently
+    // ActionString<T>::Strings, doesn't exist.
+    static_assert(
+        std::is_object<decltype(ActionString<T>::Strings)>::value,
+        "T must have an explicit ActionString specialization with a Strings map"
+    );
 
   public:
     using ValidationFn = std::function<bool(T)>;
