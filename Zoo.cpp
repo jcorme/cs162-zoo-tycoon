@@ -100,14 +100,6 @@ void Zoo::IncrementAnimalAges(unsigned int by)
     a->IncrementAge(by);
 }
 
-Option<const Animal *> Zoo::operator[](AnimalsVec::size_type idx) const
-{
-  if (idx >= animals_.size())
-    return None;
-
-  return animals_[idx].get();
-}
-
 std::ostream &operator<<(std::ostream &os, const Zoo &zoo)
 {
   os << "Animals in your zoo:\n";

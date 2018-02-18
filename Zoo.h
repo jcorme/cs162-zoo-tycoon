@@ -32,8 +32,6 @@ class Zoo
 
     void IncrementAnimalAges(unsigned by = 1);
 
-    Option<const Animal *> operator[](AnimalsVec::size_type idx) const;
-
   private:
     std::vector<std::unique_ptr<Animal>> animals_;
 };
