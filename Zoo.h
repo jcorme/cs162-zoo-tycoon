@@ -18,8 +18,8 @@ class Zoo
     bool RemoveAnimal(const Animal &animal);
     std::vector<CAnimalRef> AnimalGiveBirth(const Animal &animal);
 
-    std::vector<std::reference_wrapper<const Animal>> Animals() const;
-    std::vector<std::reference_wrapper<const Animal>> AdultAnimals() const;
+    std::vector<CAnimalRef> Animals() const;
+    std::vector<CAnimalRef> AdultAnimals() const;
     AnimalsVec::size_type NumberOfAnimals() const
         { return animals_.size(); };
     AnimalsVec::size_type NumberOfAdultAnimals() const;

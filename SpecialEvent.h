@@ -34,8 +34,8 @@ class SpecialEvent
 
     // These accessors return Option because their values only exist if the
     // event type is their corresponding type.
-    Option<std::reference_wrapper<const Animal>> sick_animal() const;
-    Option<std::reference_wrapper<const Animal>> animal_birth() const;
+    Option<CAnimalRef> sick_animal() const;
+    Option<CAnimalRef> animal_birth() const;
     Option<unsigned> monkey_bonus_revenue() const;
 
   private:
@@ -48,16 +48,16 @@ class SpecialEvent
     union
     {
       void *stub_ = nullptr;
-      Option<std::reference_wrapper<const Animal>> sick_animal_;
-      Option<std::reference_wrapper<const Animal>> animal_birth_;
+      Option<CAnimalRef> sick_animal_;
+      Option<CAnimalRef> animal_birth_;
       unsigned monkey_bonus_revenue_;
     };
 
-    Option<std::reference_wrapper<const Animal>> RandomSickAnimal();
-    Option<std::reference_wrapper<const Animal>> RandomAdultAnimal();
+    Option<CAnimalRef> RandomSickAnimal();
+    Option<CAnimalRef> RandomAdultAnimal();
 
-    Option<std::reference_wrapper<const Animal>> ChooseRandomAnimal(
-        std::vector<std::reference_wrapper<const Animal>> animals);
+    Option<CAnimalRef> ChooseRandomAnimal(
+        std::vector<CAnimalRef> animals);
 
     SpecialEventType RandomEventType();
     SpecialEventType BiasedEventTypeFromFood(FoodType t);

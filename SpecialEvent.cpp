@@ -47,7 +47,7 @@ SpecialEvent::~SpecialEvent()
   }
 }
 
-Option<std::reference_wrapper<const Animal>> SpecialEvent::sick_animal() const
+Option<CAnimalRef> SpecialEvent::sick_animal() const
 {
   if (type_ != SpecialEventType::SickAnimal)
     return None;
@@ -55,7 +55,7 @@ Option<std::reference_wrapper<const Animal>> SpecialEvent::sick_animal() const
   return sick_animal_;
 }
 
-Option<std::reference_wrapper<const Animal>> SpecialEvent::animal_birth() const
+Option<CAnimalRef> SpecialEvent::animal_birth() const
 {
   if (type_ != SpecialEventType::AnimalBirth)
     return None;
