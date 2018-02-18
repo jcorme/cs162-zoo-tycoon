@@ -47,14 +47,3 @@ bool Player::SpendMoney(double amount, const std::string &desc)
   return true;
 }
 
-void Player::HandleSpecialEvent(SpecialEvent e)
-{
-  switch (e.type())
-  {
-    case SpecialEventType::SickAnimal:
-    case SpecialEventType::AnimalBirth:
-    case SpecialEventType::ZooAttendanceBoom:
-    case SpecialEventType::NoSpecialEvent:
-      break;
-  }
-}

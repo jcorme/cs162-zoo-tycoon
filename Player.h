@@ -33,7 +33,6 @@ class Player
         { bank_account_.Deposit(amount, desc); };
 
     void PrintBankAccountInformation() const { std::cout << bank_account_; }
-    void HandleSpecialEvent(SpecialEvent e);
 
   private:
     BankAccount bank_account_;
