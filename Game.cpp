@@ -1,20 +1,19 @@
 #include "Game.h"
 #include "GameTurn.h"
 
-void Game::Run()
-{
-  for (;;)
-  {
+void Game::Run() {
+  for (;;) {
     GameTurnResult result = GameTurn(player_, base_food_cost_).Run();
 
-    switch (result)
-    {
+    switch (result) {
       case GameTurnResult::Quit:
         std::cout << "Thanks for playing!" << std::endl;
         return;
+
       case GameTurnResult::PlayerBankrupt:
         std::cout << "GAME OVER: You're zoo has gone bankrupt!" << std::endl;
         return;
+
       default:
         std::cout << "\nHit enter to continue to the next day...";
         std::cin.ignore();
@@ -25,8 +24,7 @@ void Game::Run()
   }
 }
 
-void Game::SetNewBaseFoodCost()
-{
+void Game::SetNewBaseFoodCost() {
   std::uniform_int_distribution<unsigned> uni(
       BASE_FOOD_COST_MIN_PCT_CHANGE, BASE_FOOD_COST_MAX_PCT_CHANGE);
   unsigned pct_change = uni(rng_engine_);

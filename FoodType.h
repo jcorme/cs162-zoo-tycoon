@@ -2,8 +2,7 @@
 #define ZOO_TYCOON_FOODTYPE_H
 
 
-enum class FoodType
-{
+enum class FoodType {
   Regular,
   Premium,
   Cheap

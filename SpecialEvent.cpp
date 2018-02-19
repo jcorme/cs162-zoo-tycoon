@@ -1,28 +1,23 @@
 #include "SpecialEvent.h"
 
 SpecialEvent::SpecialEvent(const Zoo &zoo, SpecialEventType t):
-    zoo_(zoo), type_(t)
-{
+    zoo_(zoo), type_(t) {
   SetValueBasedOnEvent();
 }
 
 SpecialEvent::SpecialEvent(const Zoo &zoo):
-    zoo_(zoo), type_(RandomEventType())
-{
+    zoo_(zoo), type_(RandomEventType()) {
   SetValueBasedOnEvent();
 }
 
 SpecialEvent::SpecialEvent(const Zoo &zoo, FoodType t):
-    zoo_(zoo), type_(BiasedEventTypeFromFood(t))
-{
+    zoo_(zoo), type_(BiasedEventTypeFromFood(t)) {
   SetValueBasedOnEvent();
 }
 
 SpecialEvent::SpecialEvent(const SpecialEvent &s):
-    zoo_(s.zoo_), type_(s.type_)
-{
-  switch (s.type_)
-  {
+    zoo_(s.zoo_), type_(s.type_) {
+  switch (s.type_) {
     case SpecialEventType::SickAnimal:
       sick_animal_ = s.sick_animal_;
     case SpecialEventType::AnimalBirth:
@@ -33,10 +28,8 @@ SpecialEvent::SpecialEvent(const SpecialEvent &s):
   }
 }
 
-SpecialEvent::~SpecialEvent()
-{
-  switch (type_)
-  {
+SpecialEvent::~SpecialEvent() {
+  switch (type_) {
     case SpecialEventType::SickAnimal:
       sick_animal_.~Option();
       break;
@@ -47,16 +40,7 @@ SpecialEvent::~SpecialEvent()
   }
 }
 
-Option<CAnimalRef> SpecialEvent::sick_animal() const
-{
-  if (type_ != SpecialEventType::SickAnimal)
-    return None;
-
-  return sick_animal_;
-}
-
-Option<CAnimalRef> SpecialEvent::animal_birth() const
-{
+Option<CAnimalRef> SpecialEvent::animal_birth() const {
   if (type_ != SpecialEventType::AnimalBirth)
     return None;
 
@@ -70,34 +54,14 @@ Option<unsigned> SpecialEvent::monkey_bonus_revenue() const {
   return monkey_bonus_revenue_;
 }
 
-Option<CAnimalRef> SpecialEvent::RandomSickAnimal()
-{
-  return ChooseRandomAnimal(zoo_.Animals());
+Option<CAnimalRef> SpecialEvent::sick_animal() const {
+  if (type_ != SpecialEventType::SickAnimal)
+    return None;
+
+  return sick_animal_;
 }
 
-Option<CAnimalRef> SpecialEvent::RandomAdultAnimal()
-{
-  std::vector<CAnimalRef> adult_animals = zoo_.AdultAnimals();
-  return ChooseRandomAnimal(adult_animals);
-}
-
-Option<CAnimalRef> SpecialEvent::ChooseRandomAnimal(
-    std::vector<CAnimalRef> animals)
-{
-  using VecSizeT = std::vector<CAnimalRef>::size_type;
-  if (animals.empty()) return None;
-  std::uniform_int_distribution<VecSizeT> uni(0, animals.size() - 1);
-  return animals[uni(rng_engine_)];
-}
-
-SpecialEventType SpecialEvent::RandomEventType()
-{
-  std::uniform_int_distribution<unsigned> uni(0, MAX_SPECIAL_EVENT_TYPE_INT);
-  return static_cast<SpecialEventType>(uni(rng_engine_));
-}
-
-SpecialEventType SpecialEvent::BiasedEventTypeFromFood(FoodType t)
-{
+SpecialEventType SpecialEvent::BiasedEventTypeFromFood(FoodType t) {
   double sickness_weight;
   unsigned m = MAX_SPECIAL_EVENT_TYPE_INT;
 
@@ -117,8 +81,7 @@ SpecialEventType SpecialEvent::BiasedEventTypeFromFood(FoodType t)
   std::vector<double> weights;
   weights.reserve(MAX_SPECIAL_EVENT_TYPE_INT + 1);
   for (decltype(weights.size()) i = 0;
-       i != (MAX_SPECIAL_EVENT_TYPE_INT + 1); ++i)
-  {
+       i != (MAX_SPECIAL_EVENT_TYPE_INT + 1); ++i) {
     if (i == index_for_sickness) weights.push_back(sickness_weight);
     else weights.push_back(1.0);
   }
@@ -127,10 +90,36 @@ SpecialEventType SpecialEvent::BiasedEventTypeFromFood(FoodType t)
   return static_cast<SpecialEventType>(dis(rng_engine_));
 }
 
-void SpecialEvent::SetValueBasedOnEvent()
-{
-  switch (type_)
-  {
+Option<CAnimalRef> SpecialEvent::ChooseRandomAnimal(
+    std::vector<CAnimalRef> animals) {
+  using VecSizeT = std::vector<CAnimalRef>::size_type;
+  if (animals.empty()) return None;
+  std::uniform_int_distribution<VecSizeT> uni(0, animals.size() - 1);
+  return animals[uni(rng_engine_)];
+}
+
+Option<CAnimalRef> SpecialEvent::RandomAdultAnimal() {
+  std::vector<CAnimalRef> adult_animals = zoo_.AdultAnimals();
+  return ChooseRandomAnimal(adult_animals);
+}
+
+unsigned SpecialEvent::RandomBonusRevenue() {
+  std::uniform_int_distribution<unsigned> uni(
+      MIN_EXTRA_BONUS_REVENUE, MAX_EXTRA_BONUS_REVENUE);
+  return uni(rng_engine_);
+}
+
+SpecialEventType SpecialEvent::RandomEventType() {
+  std::uniform_int_distribution<unsigned> uni(0, MAX_SPECIAL_EVENT_TYPE_INT);
+  return static_cast<SpecialEventType>(uni(rng_engine_));
+}
+
+Option<CAnimalRef> SpecialEvent::RandomSickAnimal() {
+  return ChooseRandomAnimal(zoo_.Animals());
+}
+
+void SpecialEvent::SetValueBasedOnEvent() {
+  switch (type_) {
     case SpecialEventType::SickAnimal:
       sick_animal_ = RandomSickAnimal();
       break;
@@ -143,11 +132,3 @@ void SpecialEvent::SetValueBasedOnEvent()
     default: break;
   }
 }
-
-unsigned SpecialEvent::RandomBonusRevenue()
-{
-  std::uniform_int_distribution<unsigned> uni(
-      MIN_EXTRA_BONUS_REVENUE, MAX_EXTRA_BONUS_REVENUE);
-  return uni(rng_engine_);
-}
-

@@ -6,8 +6,7 @@
 #include "AnimalSpecies.h"
 #include "FoodType.h"
 
-enum class PlayerMainAction
-{
+enum class PlayerMainAction {
   BuyAnimal,
   ViewZooAnimals,
   CheckBank,
@@ -43,8 +42,8 @@ struct ActionString<unsigned>
   static const ActionStringMap<unsigned> Strings;
 };
 
-std::vector<PlayerMainAction> AllMainActions();
 std::vector<FoodType> AllFoodOptions();
+std::vector<PlayerMainAction> AllMainActions();
 
 
 #endif //ZOO_TYCOON_PLAYERACTION_H

@@ -18,23 +18,22 @@ enum class SpecialEventType
     NoSpecialEvent
 };
 
-class SpecialEvent
-{
+class SpecialEvent {
   public:
     SpecialEvent(const Zoo &zoo, SpecialEventType t);
     explicit SpecialEvent(const Zoo &zoo);
     SpecialEvent(const Zoo &zoo, FoodType t);
-    explicit SpecialEvent(const SpecialEvent &s);
+    SpecialEvent(const SpecialEvent &s);
 
     ~SpecialEvent();
 
-    SpecialEventType type() const { return type_; }
-
     // These accessors return Option because their values only exist if the
     // event type is their corresponding type.
-    Option<CAnimalRef> sick_animal() const;
     Option<CAnimalRef> animal_birth() const;
     Option<unsigned> monkey_bonus_revenue() const;
+    Option<CAnimalRef> sick_animal() const;
+    SpecialEventType type() const { return type_; }
+
 
   private:
     std::mt19937 rng_engine_ = MakeRngEngine();
@@ -43,24 +42,22 @@ class SpecialEvent
 
     SpecialEventType type_;
 
-    union
-    {
+    union {
       void *stub_ = nullptr;
-      Option<CAnimalRef> sick_animal_;
       Option<CAnimalRef> animal_birth_;
       unsigned monkey_bonus_revenue_;
+      Option<CAnimalRef> sick_animal_;
     };
 
-    Option<CAnimalRef> RandomSickAnimal();
-    Option<CAnimalRef> RandomAdultAnimal();
-
+    SpecialEventType BiasedEventTypeFromFood(FoodType t);
     Option<CAnimalRef> ChooseRandomAnimal(
         std::vector<CAnimalRef> animals);
-
-    SpecialEventType RandomEventType();
-    SpecialEventType BiasedEventTypeFromFood(FoodType t);
-    void SetValueBasedOnEvent();
+    Option<CAnimalRef> RandomAdultAnimal();
     unsigned RandomBonusRevenue();
+    SpecialEventType RandomEventType();
+    Option<CAnimalRef> RandomSickAnimal();
+
+    void SetValueBasedOnEvent();
 };
 
 

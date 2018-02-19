@@ -12,8 +12,7 @@ class Animal;
 using AnimalsVec = std::vector<std::unique_ptr<Animal>>;
 using CAnimalRef = std::reference_wrapper<const Animal>;
 
-class Animal
-{
+class Animal {
   friend bool operator==(const Animal &lhs, const Animal &rhs);
 
   public:
@@ -26,29 +25,27 @@ class Animal
         double revenue_pct = 0.05);
 
     unsigned age() const { return age_; }
-    std::string PrettyAge() const;
     unsigned babies_per_birth() const { return babies_per_birth_; }
     unsigned cost() const { return cost_; }
     const std::string &name() const { return name_; }
 
-    double SickCareCost() const { return static_cast<double>(cost_) / 2; }
-
+    virtual double DailyRevenue(Option<unsigned> bonus_revenue) const;
+    double FoodCost(FoodType t, double base_cost) const;
     bool IsBaby() const { return age_ < 30; }
     inline bool IsAdult() const;
-
-    double FoodCost(FoodType t, double base_cost) const;
-    virtual double DailyRevenue(Option<unsigned> bonus_revenue) const;
-
-    virtual AnimalsVec GiveBirth() const = 0;
+    std::string PrettyAge() const;
+    double SickCareCost() const { return static_cast<double>(cost_) / 2; }
 
     void IncrementAge(unsigned by = 1) { age_ += by; }
+
+    virtual AnimalsVec GiveBirth() const = 0;
 
   private:
     std::string name_;
 
     unsigned age_;
-    unsigned cost_;
     unsigned babies_per_birth_;
+    unsigned cost_;
     unsigned food_cost_multiplier_;
     // Animals generate revenue equal to percentage of the cost of
     // one of their species (default = 5%).
@@ -57,14 +54,12 @@ class Animal
 
 bool operator==(const Animal &lhs, const Animal &rhs);
 
-bool Animal::IsAdult() const
-{
+bool Animal::IsAdult() const {
   return (static_cast<double>(age_) / 365) >= 3;
 }
 
 template <class T>
-AnimalsVec AnimalGiveBirth(const Animal *animal)
-{
+AnimalsVec AnimalGiveBirth(const Animal *animal) {
   AnimalsVec babies;
   babies.reserve(animal->babies_per_birth());
   for (decltype(babies.size()) i = 0; i != animal->babies_per_birth(); ++i)

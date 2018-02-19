@@ -8,8 +8,7 @@ static constexpr unsigned SEA_OTTER_UNIT_COST = 5000;
 static constexpr unsigned SEA_OTTER_BABIES_PER_BIRTH = 2;
 static constexpr unsigned SEA_OTTER_FOOD_COST_MULTIPLIER = 2;
 
-class SeaOtter: public Animal
-{
+class SeaOtter: public Animal {
   public:
     explicit SeaOtter(unsigned age);
     SeaOtter(): SeaOtter(0) {}

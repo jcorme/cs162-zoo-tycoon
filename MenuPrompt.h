@@ -12,18 +12,17 @@
 #include "Utils.h"
 
 template <class T>
-class MenuPrompt
-{
-    // This doesn't actually work. There's no clean/sane way to check that
-    // an explicit specialization of ActionString, with a Strings member,
-    // exists in C++11. The static assertion doesn't technically fail, but the
-    // compiler will still throw an error if no ActionString specialization for
-    // T exists because ActionString<T>, and consequently
-    // ActionString<T>::Strings, doesn't exist.
-    static_assert(
-        std::is_object<decltype(ActionString<T>::Strings)>::value,
-        "T must have an explicit ActionString specialization with a Strings map"
-    );
+class MenuPrompt {
+  // This doesn't actually work. There's no clean/sane way to check that
+  // an explicit specialization of ActionString, with a Strings member,
+  // exists in C++11. The static assertion doesn't technically fail, but the
+  // compiler will still throw an error if no ActionString specialization for
+  // T exists because ActionString<T>, and consequently
+  // ActionString<T>::Strings, doesn't exist.
+  static_assert(
+      std::is_object<decltype(ActionString<T>::Strings)>::value,
+      "T must have an explicit ActionString specialization with a Strings map"
+  );
 
   public:
     using ValidationFn = std::function<bool(T)>;
@@ -34,12 +33,13 @@ class MenuPrompt
 
     void AddOption(T option) { options_.push_back(option); }
     void AddOptions(std::vector<T> options);
-    void RemoveOption(T option);
     void OverrideStrings(ActionStringMap<T> overrides);
+    void RemoveOption(T option);
     void SetValidationFn(ValidationFn fn) { custom_validation_fn_ = fn; }
 
     Option<T> operator()(
-        Option<std::string> prompt_msg = None, Option<std::string> fail_msg = None);
+        Option<std::string> prompt_msg = None,
+        Option<std::string> fail_msg = None);
 
   private:
     std::vector<T> options_;
@@ -51,42 +51,80 @@ class MenuPrompt
     void SortOptions();
     void EraseDuplicateOptions();
 
+    const std::string &DefaultStringFor(T option) const;
     std::string OptionsAsString() const;
     const std::string &StringFor(T option) const;
-    const std::string &DefaultStringFor(T option) const;
 };
 
 template <class T>
-MenuPrompt<T>::MenuPrompt(std::initializer_list<T> options)
-{
+MenuPrompt<T>::MenuPrompt(std::initializer_list<T> options) {
   for (const auto &o : options)
     options_.push_back(o);
 }
 
 template <class T>
-void MenuPrompt<T>::AddOptions(std::vector<T> options)
-{
+void MenuPrompt<T>::AddOptions(std::vector<T> options) {
   for (const auto &o : options)
     AddOption(o);
 }
 
 template <class T>
-void MenuPrompt<T>::RemoveOption(T option)
-{
+void MenuPrompt<T>::OverrideStrings(ActionStringMap<T> overrides) {
+  override_map_ = overrides;
+}
+
+template <class T>
+void MenuPrompt<T>::RemoveOption(T option) {
   options_.erase(
       std::remove(options_.begin(), options_.end(), option), options_.end());
 }
 
 template <class T>
-void MenuPrompt<T>::OverrideStrings(ActionStringMap<T> overrides)
+void MenuPrompt<T>::SortOptions()
 {
-  override_map_ = overrides;
+  std::sort(options_.begin(), options_.end(), [](const T &t1, const T &t2) {
+      return static_cast<unsigned>(t1) < static_cast<unsigned>(t2);
+  });
+}
+
+template <class T>
+void MenuPrompt<T>::EraseDuplicateOptions() {
+  auto fwd_it = std::unique(options_.begin(), options_.end());
+  options_.erase(fwd_it, options_.end());
+}
+
+template <class T>
+const std::string &MenuPrompt<T>::DefaultStringFor(T option) const {
+  return ActionString<T>::Strings.at(option);
+}
+
+template <class T>
+std::string MenuPrompt<T>::OptionsAsString() const {
+  std::ostringstream oss;
+
+  if (enable_cancel_)
+    oss << "0) Cancel" << '\n';
+
+  for (decltype(options_.size()) i = 0; i != options_.size(); ++i)
+    oss << i + 1 << ") " << StringFor(options_[i]) << '\n';
+
+  return oss.str();
+}
+
+template <class T>
+const std::string &MenuPrompt<T>::StringFor(T option) const {
+  if (override_map_.empty()) return DefaultStringFor(option);
+
+  if (override_map_.find(option) != override_map_.cend()) {
+    return override_map_.at(option);
+  }
+
+  return DefaultStringFor(option);
 }
 
 template <class T>
 Option<T> MenuPrompt<T>::operator()(
-    Option<std::string> prompt_msg, Option<std::string> fail_msg)
-{
+    Option<std::string> prompt_msg, Option<std::string> fail_msg) {
   SortOptions();
   EraseDuplicateOptions();
 
@@ -99,6 +137,7 @@ Option<T> MenuPrompt<T>::operator()(
 
   std::string options_str = OptionsAsString();
   std::cout << options_str << std::endl;
+
   auto max_opt = options_.size();
   unsigned choice = PromptUntilValid<unsigned>(
       "Enter option: ",
@@ -107,7 +146,7 @@ Option<T> MenuPrompt<T>::operator()(
           bool in_range = opt > 0 && opt <= max_opt;
           if (custom_validation_fn_.IsSome())
             return in_range &&
-                custom_validation_fn_.CUnwrapRef()(options_[opt - 1]);
+                   custom_validation_fn_.CUnwrapRef()(options_[opt - 1]);
           return in_range;
       }
   );
@@ -115,48 +154,6 @@ Option<T> MenuPrompt<T>::operator()(
   if (!choice) return None;
 
   return options_[choice - 1];
-}
-
-template <class T>
-void MenuPrompt<T>::SortOptions()
-{
-  std::sort(options_.begin(), options_.end(), [](const T &t1, const T &t2) {
-      return static_cast<unsigned>(t1) < static_cast<unsigned>(t2);
-  });
-}
-
-template <class T>
-void MenuPrompt<T>::EraseDuplicateOptions()
-{
-  auto fwd_it = std::unique(options_.begin(), options_.end());
-  options_.erase(fwd_it, options_.end());
-}
-
-template <class T>
-std::string MenuPrompt<T>::OptionsAsString() const
-{
-  std::ostringstream oss;
-  if (enable_cancel_)
-    oss << "0) Cancel" << '\n';
-  for (decltype(options_.size()) i = 0; i != options_.size(); ++i)
-    oss << i + 1 << ") " << StringFor(options_[i]) << '\n';
-  return oss.str();
-}
-
-template <class T>
-const std::string &MenuPrompt<T>::StringFor(T option) const
-{
-  if (override_map_.empty()) return DefaultStringFor(option);
-  if (override_map_.find(option) != override_map_.cend()) {
-    return override_map_.at(option);
-  }
-  return DefaultStringFor(option);
-}
-
-template <class T>
-const std::string &MenuPrompt<T>::DefaultStringFor(T option) const
-{
-  return ActionString<T>::Strings.at(option);
 }
 
 

@@ -8,12 +8,11 @@
 #include "Sloth.h"
 #include "Elephant.h"
 
-enum class AnimalSpecies
-{
-    Monkey,
-    SeaOtter,
-    Sloth,
-    Elephant,
+enum class AnimalSpecies {
+  Monkey,
+  SeaOtter,
+  Sloth,
+  Elephant,
 };
 
 template <AnimalSpecies A>
@@ -32,10 +31,8 @@ template <>
 struct SpeciesToType<AnimalSpecies::Elephant> { using type = Elephant; };
 
 template <class T>
-struct CreateAnimalD
-{
-  std::vector<std::unique_ptr<T>> operator()(unsigned qty, unsigned age)
-  {
+struct CreateAnimalD {
+  std::vector<std::unique_ptr<T>> operator()(unsigned qty, unsigned age) {
     std::vector<std::unique_ptr<T>> ts;
     ts.reserve(qty);
     for (decltype(ts.size()) i = 0; i != qty; ++i)
@@ -45,10 +42,8 @@ struct CreateAnimalD
 };
 
 template <class T>
-struct CreateAnimalS
-{
-  std::vector<T> operator()(unsigned qty, unsigned age)
-  {
+struct CreateAnimalS {
+  std::vector<T> operator()(unsigned qty, unsigned age) {
     std::vector<T> ts;
     ts.reserve(qty);
     for (auto i = 0; i != qty; ++i)
@@ -65,11 +60,9 @@ using CreateStaticAnimal = CreateAnimalS<typename SpeciesToType<A>::type>;
 
 extern const ActionStringMap<AnimalSpecies> AnimalSpeciesToStringMap;
 
-std::string AnimalSpeciesToString(AnimalSpecies s);
-
-std::unique_ptr<Animal> CreateFromSpecies(AnimalSpecies s, unsigned age);
-
 std::vector<AnimalSpecies> AllSpecies();
+std::string AnimalSpeciesToString(AnimalSpecies s);
+std::unique_ptr<Animal> CreateFromSpecies(AnimalSpecies s, unsigned age);
 
 
 #endif //ZOO_TYCOON_ANIMALSPECIES_H

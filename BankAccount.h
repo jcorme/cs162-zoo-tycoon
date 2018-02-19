@@ -4,22 +4,7 @@
 
 #include <string>
 #include <vector>
-
-enum class TransactionType
-{
-  Deposit,
-  Withdrawal
-};
-
-struct BankAccountTransaction
-{
-  BankAccountTransaction(TransactionType type, double amount,
-      const std::string &desc);
-
-  TransactionType type;
-  double amount;
-  std::string description;
-};
+#include "BankAccountTransaction.h"
 
 class BankAccount
 {
@@ -35,9 +20,8 @@ class BankAccount
     bool CanAfford(double amount) const { return amount <= balance_; };
 
     void Deposit(double amount, const std::string &reason);
-    bool Withdraw(double amount, const std::string &reason);
-
     void LogTransaction(BankAccountTransaction t);
+    bool Withdraw(double amount, const std::string &reason);
 
   private:
     double balance_;

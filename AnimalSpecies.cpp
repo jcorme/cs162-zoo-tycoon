@@ -1,14 +1,17 @@
 #include "AnimalSpecies.h"
 
 const ActionStringMap<AnimalSpecies> AnimalSpeciesToStringMap = {
-    { AnimalSpecies::Monkey, "Monkey" },
-    { AnimalSpecies::SeaOtter, "Sea Otter" },
-    { AnimalSpecies::Sloth, "Sloth" },
-    { AnimalSpecies::Elephant, "Elephant" }
+  { AnimalSpecies::Monkey, "Monkey" },
+  { AnimalSpecies::SeaOtter, "Sea Otter" },
+  { AnimalSpecies::Sloth, "Sloth" },
+  { AnimalSpecies::Elephant, "Elephant" }
 };
 
-std::string AnimalSpeciesToString(AnimalSpecies s)
-{
+std::vector<AnimalSpecies> AllSpecies() {
+  return ActionStringMapKeys(AnimalSpeciesToStringMap);
+}
+
+std::string AnimalSpeciesToString(AnimalSpecies s) {
   return AnimalSpeciesToStringMap.at(s);
 }
 
@@ -29,7 +32,3 @@ std::unique_ptr<Animal> CreateFromSpecies(AnimalSpecies s, unsigned age)
   }
 }
 
-std::vector<AnimalSpecies> AllSpecies()
-{
-  return ActionStringMapKeys(AnimalSpeciesToStringMap);
-}

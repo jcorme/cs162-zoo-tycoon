@@ -8,15 +8,13 @@ FoodType GameTurn::food_type_ = FoodType::Regular;
 GameTurn::GameTurn(Player &player, double base_food_cost):
     player_(player), zoo_(player.zoo()),
     special_event_(SpecialEvent(player.zoo(), food_type_)),
-    base_food_cost_(base_food_cost), monkey_bonus_revenue_(None)
-{
+    base_food_cost_(base_food_cost), monkey_bonus_revenue_(None) {
   food_type_= PromptPlayerFoodType();
   std::cout << "\n\n" << std::endl;
   ++day_;
 }
 
-GameTurnResult GameTurn::Run()
-{
+GameTurnResult GameTurn::Run() {
   zoo_.IncrementAnimalAges();
   PrintGameState();
   FeedAnimals();
@@ -29,9 +27,9 @@ GameTurnResult GameTurn::Run()
       return result;
   }
 
-  for (;;)
-  {
+  for (;;) {
     PlayerMainAction action = PromptPlayerMainMenu();
+
     if (action == PlayerMainAction::EndTurn) break;
     else if (action == PlayerMainAction::QuitGame) return GameTurnResult::Quit;
     // Currently, not worried about the return value.
@@ -43,8 +41,68 @@ GameTurnResult GameTurn::Run()
   return GameTurnResult::Continue;
 }
 
-Option<GameTurnResult> GameTurn::HandleSpecialEvent()
-{
+void GameTurn::PrintGameState() const {
+  using Map = std::unordered_map<std::string, std::pair<unsigned, unsigned>>;
+
+  std::cout << "Day " << day_ << " -- CURRENT STATE OF THE GAME: " << '\n'
+            << "\tBank Account Balance: " << player_.MoneyRemaining() << '\n'
+            << "\t# of Adult Animals: " << zoo_.NumberOfAdultAnimals() << '\n'
+            << "\t# of Baby Animals: " << zoo_.NumberOfBabyAnimals() << '\n'
+            << "\t# of Adults/Babies of Each Species:\n";
+
+  Map counts = zoo_.AdultsAndBabiesForEachSpecies();
+  for (const auto &c : counts)
+    std::cout << "\t\t" << c.first << ": " << c.second.first << " adults and "
+              << c.second.second << " babies." << '\n';
+
+  std::cout << '\n' << std::endl;
+}
+
+Option<GameTurnResult> GameTurn::AnimalBirth(CAnimalRef parent) {
+  std::cout << "An adult " << parent.get().name() << " gave birth to "
+            << parent.get().babies_per_birth() << " babies!\n";
+
+  std::vector<CAnimalRef> babies = zoo_.AnimalGiveBirth(parent);
+  for (const auto &b : babies) {
+    if (!player_.FeedAnimal(b, food_type_, base_food_cost_)) {
+      std::cout << "You don't have enough money to feed your newborn "
+                << b.get().name() << "!\n";
+
+      return GameTurnResult::PlayerBankrupt;
+    }
+  }
+
+  double feeding_cost = parent.get().FoodCost(food_type_, base_food_cost_);
+  std::cout << "Successfully fed " << parent.get().babies_per_birth()
+            << " newborns; paid $" << feeding_cost << ".\n";
+
+  return None;
+}
+
+Option<GameTurnResult> GameTurn::FeedAnimals() {
+  if (!player_.FeedAnimals(food_type_, base_food_cost_))
+    return GameTurnResult::PlayerBankrupt;
+
+  double feeding_cost = zoo_.FeedingCost(food_type_, base_food_cost_);
+  if (feeding_cost > 0)
+    std::cout << "Successfully fed all the animals; paid $" << feeding_cost
+              << '.' << std::endl;
+
+  return None;
+}
+
+void GameTurn::GivePlayerRevenue() {
+  std::string n_animals = std::to_string(zoo_.NumberOfAnimals());
+  std::string desc = "Daily zoo revenue from " + n_animals + " animals";
+  double total_revenue = zoo_.TotalDailyRevenue(monkey_bonus_revenue_);
+
+  player_.AddMoney(total_revenue, desc);
+
+  std::cout << "\nThe zoo made $" << total_revenue << " today, bringing your "
+            << "bank balance to $" << player_.MoneyRemaining() << ".\n";
+}
+
+Option<GameTurnResult> GameTurn::HandleSpecialEvent() {
   switch (special_event_.type())
   {
     case SpecialEventType::AnimalBirth: {
@@ -54,19 +112,18 @@ Option<GameTurnResult> GameTurn::HandleSpecialEvent()
     case SpecialEventType::SickAnimal: {
       Option<CAnimalRef> possible_sick_animal = special_event_.sick_animal();
       return SickAnimal(possible_sick_animal);
-    }
     case SpecialEventType::ZooAttendanceBoom:
       monkey_bonus_revenue_ = special_event_.monkey_bonus_revenue();
       std::cout << "There is a zoo attendance boom today! Each monkey will "
                 << "generate an extra $" << monkey_bonus_revenue_.CUnwrapRef()
                 << " in revenue today!\n";
       return None;
+
     default: return None;
   }
 }
 
-Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action)
-{
+Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action) {
   switch (action) {
     case PlayerMainAction::BuyAnimal:
     {
@@ -84,18 +141,22 @@ Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action)
       }
       break;
     }
+
     case PlayerMainAction::ViewZooAnimals:
       std::cout << zoo_ << std::endl;
       break;
+
     case PlayerMainAction::CheckBank:
       std::cout << "Your Bank Account Information: " << "\n\n";
       player_.PrintBankAccountInformation();
       std::cout << '\n' << std::endl;
       break;
+
     case PlayerMainAction::PrintGameState:
       PrintGameState();
       std::cout << std::endl;
       break;
+
     default:
       break;
   }
@@ -128,22 +189,18 @@ Option<GameTurnResult> GameTurn::AnimalBirth(
   return None;
 }
 
-Option<GameTurnResult> GameTurn::SickAnimal(
-    Option<CAnimalRef> possible_sick_animal)
-{
-  if (possible_sick_animal.IsNone()) return GameTurnResult::MissingAnimals;
-  CAnimalRef sick_animal = possible_sick_animal.Unwrap();
+Option<GameTurnResult> GameTurn::SickAnimal(CAnimalRef sick_animal) {
   std::cout << "A " << sick_animal.get().name() << " fell sick!\n";
-  if (!player_.CareForSickAnimal(sick_animal))
-  {
+
+  if (!player_.CareForSickAnimal(sick_animal)) {
     std::cout << "Since you cannot afford to pay for their medical costs, "
               << "the " << sick_animal.get().name() << " has died.\n";
     zoo_.RemoveAnimal(sick_animal);
-  }
-  else
+  } else {
     std::cout << "You paid $" << sick_animal.get().SickCareCost()
               << " in medical costs to treat the " << sick_animal.get().name()
               << ".\n";
+  }
 
   return None;
 }
@@ -197,67 +254,43 @@ Option<unsigned> GameTurn::PromptPlayerPurchaseQuantity(AnimalSpecies s) const
   if (!CanBuyAnimal()) return None;
   std::string animal_type = AnimalSpeciesToString(s);
   std::cout << "\nHow many " << animal_type << "s would you like to buy?\n";
+
   MenuPrompt<unsigned> prompt(true);
   prompt.AddOptions({1,2});
   ActionStringMap<unsigned> options_map = {
       {1, "One"},
       {2, "Two"}
   };
+
   if (animals_bought_.IsSome()) prompt.RemoveOption(2);
   prompt.OverrideStrings(options_map);
   return prompt();
 }
 
-bool GameTurn::PlayerBuyAnimal(AnimalSpecies s, unsigned qty)
-{
-  if (!player_.BuyAnimals(s, qty)) return false;
+Option<GameTurn::AnimalPurchase> GameTurn::PromptPlayerBuyAnimal() {
+  if (!CanBuyAnimal()) return None;
 
-  std::cout << "\nYou purchased " << qty << ' ' << AnimalSpeciesToString(s)
-            << "s!\n";
+  std::vector<AnimalSpecies> animal_options;
+  Option<std::string> prompt_msg = animals_bought_.MapCRef<std::string>(
+      [&](const AnimalPurchase &p) {
+          // small side effect
+          animal_options.push_back(p.first);
 
-  if (animals_bought_.IsSome())
-    animals_bought_.UnwrapRef().second += qty;
-  else
-    animals_bought_ = std::make_pair(s, qty);
+          std::string animal_type = AnimalSpeciesToString(p.first);
+          std::ostringstream oss;
 
-  return true;
-}
+          oss << "\nYou've already purchased " << p.second << ' '
+              << animal_type << " this turn, so the only thing you can buy is "
+              << MAX_ANIMAL_PURCHASES - p.second << " more " << animal_type
+              << ".\n"
+              << "What would you like to do?";
 
-void GameTurn::GivePlayerRevenue()
-{
-  std::string n_animals = std::to_string(zoo_.NumberOfAnimals());
-  std::string desc = "Daily zoo revenue from " + n_animals + " animals";
-  double total_revenue = zoo_.TotalDailyRevenue(monkey_bonus_revenue_);
-  player_.AddMoney(total_revenue, desc);
-  std::cout << "\nThe zoo made $" << total_revenue << " today, bringing your "
-            << "bank balance to $" << player_.MoneyRemaining() << ".\n";
-}
+          return oss.str();
+      }
+  );
 
-void GameTurn::PrintGameState() const
-{
-  using Map = std::unordered_map<std::string, std::pair<unsigned, unsigned>>;
-  std::cout << "Day " << day_ << " -- CURRENT STATE OF THE GAME: " << '\n'
-            << "\tBank Account Balance: " << player_.MoneyRemaining() << '\n'
-            << "\t# of Adult Animals: " << zoo_.NumberOfAdultAnimals() << '\n'
-            << "\t# of Baby Animals: " << zoo_.NumberOfBabyAnimals() << '\n'
-            << "\t# of Adults/Babies of Each Species:\n";
-  Map counts = zoo_.AdultsAndBabiesForEachSpecies();
-  for (const auto &c : counts)
-    std::cout << "\t\t" << c.first << ": " << c.second.first << " adults and "
-              << c.second.second << " babies." << '\n';
-  std::cout << '\n' << std::endl;
-}
+  if (animal_options.empty()) animal_options = AllSpecies();
 
-Option<GameTurnResult> GameTurn::FeedAnimals()
-{
-  if (!player_.FeedAnimals(food_type_, base_food_cost_))
-    return GameTurnResult::PlayerBankrupt;
-  double feeding_cost = zoo_.FeedingCost(food_type_, base_food_cost_);
-  if (feeding_cost > 0)
-    std::cout << "Successfully fed all the animals; paid $" << feeding_cost
-              << '.' << std::endl;
-  return None;
-}
 
 bool GameTurn::CanBuyAnimal() const
 {
@@ -267,8 +300,7 @@ bool GameTurn::CanBuyAnimal() const
   return animals_bought.second < MAX_ANIMAL_PURCHASES;
 }
 
-FoodType GameTurn::PromptPlayerFoodType() const
-{
+FoodType GameTurn::PromptPlayerFoodType() const {
   MenuPrompt<FoodType> prompt;
   prompt.AddOptions(AllFoodOptions());
   std::cout << "\nWhat food would you like to feed your animals today?\n";
