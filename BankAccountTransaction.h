@@ -14,7 +14,7 @@ class BankAccountTransaction
   public:
     BankAccountTransaction(
         BankTransactionType type, double amount, const std::string &desc):
-        type_(type), amount_(amount), description_(desc) {}
+        amount_(amount), description_(desc), type_(type) {}
 
     double amount() const { return amount_; }
     const std::string &description() const { return description_; }
