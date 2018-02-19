@@ -11,7 +11,7 @@ void Game::Run() {
         return;
 
       case GameTurnResult::PlayerBankrupt:
-        std::cout << "GAME OVER: You're zoo has gone bankrupt!" << std::endl;
+        std::cout << "GAME OVER: Your zoo has gone bankrupt!" << std::endl;
         return;
 
       default:
