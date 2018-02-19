@@ -8,7 +8,7 @@ Animal::Animal(
     unsigned babies_per_birth,
     unsigned food_cost_multiplier,
     double revenue_pct):
-    name_(name), age_(age), cost_(cost), babies_per_birth_(babies_per_birth),
+    name_(name), age_(age), babies_per_birth_(babies_per_birth), cost_(cost),
     food_cost_multiplier_(food_cost_multiplier), revenue_pct_(revenue_pct) {}
 
 double Animal::DailyRevenue(Option<unsigned> bonus_revenue) const {

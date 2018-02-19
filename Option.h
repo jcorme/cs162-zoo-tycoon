@@ -2,6 +2,7 @@
 #define ZOO_TYCOON_OPTION_H
 
 
+#include <functional>
 #include <iostream>
 #include <utility>
 #include <exception>

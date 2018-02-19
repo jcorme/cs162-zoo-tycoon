@@ -255,8 +255,6 @@ Option<GameTurn::AnimalPurchase> GameTurn::PromptPlayerBuyAnimal() {
 
   if (animal_options.empty()) animal_options = AllSpecies();
 
-  using ABPair = std::pair<AnimalSpecies, unsigned>;
-
   MenuPrompt<AnimalSpecies> prompt(true);
   prompt.AddOptions(animal_options);
   return prompt(prompt_msg).AndThen<AnimalPurchase>(
