@@ -18,29 +18,15 @@ enum class PlayerMainAction {
 template <class T>
 struct ActionString;
 
-template <>
-struct ActionString<PlayerMainAction>
-{
-  static const ActionStringMap<PlayerMainAction> Strings;
-};
+#define ZT_SPECIALIZE_ACTION_STRING(T) \
+template <> struct ActionString<T> { static const ActionStringMap<T> Strings; };
 
-template <>
-struct ActionString<AnimalSpecies>
-{
-  static const ActionStringMap<AnimalSpecies> Strings;
-};
+ZT_SPECIALIZE_ACTION_STRING(PlayerMainAction);
+ZT_SPECIALIZE_ACTION_STRING(AnimalSpecies);
+ZT_SPECIALIZE_ACTION_STRING(FoodType);
+ZT_SPECIALIZE_ACTION_STRING(unsigned);
 
-template <>
-struct ActionString<FoodType>
-{
-  static const ActionStringMap<FoodType> Strings;
-};
-
-template <>
-struct ActionString<unsigned>
-{
-  static const ActionStringMap<unsigned> Strings;
-};
+#undef ZT_SPECIALIZE_ACTION_STRING
 
 std::vector<FoodType> AllFoodOptions();
 std::vector<PlayerMainAction> AllMainActions();

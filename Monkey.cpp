@@ -8,8 +8,7 @@ Monkey::Monkey(unsigned age):
 
 double Monkey::DailyRevenue(Option<unsigned> bonus_revenue) const {
   double revenue = Animal::DailyRevenue(None);
-  if (bonus_revenue.IsSome())
-    revenue += bonus_revenue.CUnwrapRef();
+  revenue += bonus_revenue.UnwrapOr(0);
   return revenue;
 }
 

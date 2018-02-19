@@ -2,20 +2,30 @@
 #include "Animal.h"
 #include "Player.h"
 
-bool Player::BuyAnimals(AnimalSpecies s, unsigned qty, bool adults)
-{
-  if (!CanAfford(CreateFromSpecies(s, 0)->cost() * qty)) return false;
-  for (unsigned i = 0; i != qty; ++i) BuyAnimal(s, adults);
-  return true;
-}
-
-bool Player::BuyAnimal(AnimalSpecies s, bool adult)
-{
+std::pair<bool, Option<CAnimalRef>>
+Player::BuyAnimal(AnimalSpecies s, bool adult) {
   std::unique_ptr<Animal> animal = CreateFromSpecies(s, adult ? 365 * 3 : 0);
   std::string desc = "Purchased a " + animal->name();
-  if (!bank_account_.Withdraw(animal->cost(), desc)) return false;
+  if (!bank_account_.Withdraw(animal->cost(), desc))
+    return std::make_pair(false, None);
+
+  CAnimalRef animal_ref = std::cref(*animal);
   zoo_.AddAnimal(std::move(animal));
-  return true;
+
+  return std::make_pair(true, Option<CAnimalRef>(animal_ref));
+}
+
+std::pair<bool, Option<std::vector<CAnimalRef>>>
+Player::BuyAnimals(AnimalSpecies s, unsigned qty, bool adults) {
+  if (!CanAfford(CreateFromSpecies(s, 0)->cost() * qty))
+    return std::make_pair(false, None);
+
+  std::vector<CAnimalRef> animals;
+  animals.reserve(qty);
+  for (unsigned i = 0; i != qty; ++i)
+    animals.push_back(BuyAnimal(s, adults).second.Unwrap());
+
+  return std::make_pair(true, animals);
 }
 
 bool Player::CareForSickAnimal(const Animal &animal) {

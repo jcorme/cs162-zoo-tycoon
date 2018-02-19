@@ -29,12 +29,14 @@ class GameTurn {
     void PrintGameState() const;
 
   private:
+    using AnimalPurchase = std::pair<AnimalSpecies, unsigned>;
+
     GameTurn(Player &player, double base_food_cost);
 
     static unsigned day_;
     static FoodType food_type_;
 
-    Option<std::pair<AnimalSpecies, unsigned>> animals_bought_ = None;
+    Option<AnimalPurchase> animals_bought_ = None;
     Player &player_;
     Zoo &zoo_;
 
@@ -43,17 +45,16 @@ class GameTurn {
     double base_food_cost_;
     Option<unsigned> monkey_bonus_revenue_;
 
-    void IncrementAnimalAges();
+    Option<GameTurnResult> AnimalBirth(CAnimalRef parent);
     Option<GameTurnResult> FeedAnimals();
     void GivePlayerRevenue();
     Option<GameTurnResult> HandleSpecialEvent();
     Option<GameTurnResult> HandleMainAction(PlayerMainAction action);
-    Option<GameTurnResult> AnimalBirth(Option<CAnimalRef> parent);
-    Option<GameTurnResult> SickAnimal(Option<CAnimalRef> sick_animal);
-    Option<std::pair<AnimalSpecies, unsigned>> PromptPlayerBuyAnimal();
-    Option<unsigned> PromptPlayerPurchaseQuantity(AnimalSpecies s) const;
+    Option<GameTurnResult> PlayerBuyAnimal(AnimalSpecies s, unsigned qty);
+    Option<GameTurnResult> SickAnimal(CAnimalRef sick_animal);
 
-    bool PlayerBuyAnimal(AnimalSpecies s, unsigned qty);
+    Option<AnimalPurchase> BuildAnimalPurchase(AnimalSpecies s) const;
+    Option<AnimalPurchase> PromptPlayerBuyAnimal();
     FoodType PromptPlayerFoodType() const;
     PlayerMainAction PromptPlayerMainMenu();
 

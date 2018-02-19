@@ -18,17 +18,15 @@ enum class AnimalSpecies {
 template <AnimalSpecies A>
 struct SpeciesToType;
 
-template <>
-struct SpeciesToType<AnimalSpecies::Monkey> { using type = Monkey; };
+#define ZT_SPECIALIZE_SPECIES(A, T) \
+template <> struct SpeciesToType<AnimalSpecies::A> { using type = T; };
 
-template <>
-struct SpeciesToType<AnimalSpecies::SeaOtter> { using type = SeaOtter; };
+ZT_SPECIALIZE_SPECIES(Monkey, Monkey);
+ZT_SPECIALIZE_SPECIES(SeaOtter, SeaOtter);
+ZT_SPECIALIZE_SPECIES(Sloth, Sloth);
+ZT_SPECIALIZE_SPECIES(Elephant, Elephant);
 
-template <>
-struct SpeciesToType<AnimalSpecies::Sloth> { using type = Sloth; };
-
-template <>
-struct SpeciesToType<AnimalSpecies::Elephant> { using type = Elephant; };
+#undef ZT_SPECIALIZE_SPECIES
 
 template <class T>
 struct CreateAnimalD {

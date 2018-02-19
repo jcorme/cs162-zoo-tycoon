@@ -19,21 +19,30 @@ GameTurnResult GameTurn::Run() {
   PrintGameState();
   FeedAnimals();
 
-  Option<GameTurnResult> handle_result = HandleSpecialEvent();
-  if (handle_result.IsSome())
-  {
-    GameTurnResult result = handle_result.Unwrap();
-    if (result == GameTurnResult::PlayerBankrupt)
-      return result;
-  }
+  GameTurnResult handle_result = HandleSpecialEvent()
+      .UnwrapOr(GameTurnResult::Continue);
+  if (handle_result == GameTurnResult::PlayerBankrupt) return handle_result;
 
   for (;;) {
     PlayerMainAction action = PromptPlayerMainMenu();
 
     if (action == PlayerMainAction::EndTurn) break;
     else if (action == PlayerMainAction::QuitGame) return GameTurnResult::Quit;
-    // Currently, not worried about the return value.
-    else HandleMainAction(action);
+    else {
+      GameTurnResult result = HandleMainAction(action)
+          .UnwrapOr(GameTurnResult::Continue);
+
+      switch (result) {
+        case GameTurnResult::InsufficientFunds:
+          std::cout << "\nUnable to make purchase due to insufficient funds.\n";
+          break;
+
+        case GameTurnResult::PlayerBankrupt:
+          return result;
+
+        default: break;
+      }
+    }
   }
 
   GivePlayerRevenue();
@@ -103,15 +112,15 @@ void GameTurn::GivePlayerRevenue() {
 }
 
 Option<GameTurnResult> GameTurn::HandleSpecialEvent() {
-  switch (special_event_.type())
-  {
-    case SpecialEventType::AnimalBirth: {
-      Option<CAnimalRef> possible_parent = special_event_.animal_birth();
-      return AnimalBirth(possible_parent);
-    }
-    case SpecialEventType::SickAnimal: {
-      Option<CAnimalRef> possible_sick_animal = special_event_.sick_animal();
-      return SickAnimal(possible_sick_animal);
+  switch (special_event_.type()) {
+    case SpecialEventType::AnimalBirth:
+      return special_event_.animal_birth().AndThen<GameTurnResult>(
+          [&](CAnimalRef parent) { return AnimalBirth(parent); });
+
+    case SpecialEventType::SickAnimal:
+      return special_event_.sick_animal().AndThen<GameTurnResult>(
+          [&](CAnimalRef animal) { return SickAnimal(animal); });
+
     case SpecialEventType::ZooAttendanceBoom:
       monkey_bonus_revenue_ = special_event_.monkey_bonus_revenue();
       std::cout << "There is a zoo attendance boom today! Each monkey will "
@@ -126,21 +135,11 @@ Option<GameTurnResult> GameTurn::HandleSpecialEvent() {
 Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action) {
   switch (action) {
     case PlayerMainAction::BuyAnimal:
-    {
-      Option<std::pair<AnimalSpecies, unsigned>> p_purchase =
-          PromptPlayerBuyAnimal();
-      if (p_purchase.IsSome())
-      {
-        auto purchase = p_purchase.Unwrap();
-        if (!PlayerBuyAnimal(purchase.first, purchase.second))
-        {
-          std::cout << "Unable to make purchase; "
-                    << "probably due to insufficient funds (let's hope).\n";
-          return GameTurnResult::InsufficientFunds;
-        }
-      }
-      break;
-    }
+      return PromptPlayerBuyAnimal().AndThen<GameTurnResult>(
+          [&](std::pair<AnimalSpecies, unsigned> purchase) {
+              return PlayerBuyAnimal(purchase.first, purchase.second);
+          }
+      );
 
     case PlayerMainAction::ViewZooAnimals:
       std::cout << zoo_ << std::endl;
@@ -164,27 +163,33 @@ Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action) {
   return None;
 }
 
-Option<GameTurnResult> GameTurn::AnimalBirth(
-    Option<CAnimalRef> possible_parent)
-{
-  if (possible_parent.IsNone()) return GameTurnResult::MissingAnimals;
-  CAnimalRef parent = possible_parent.Unwrap();
-  std::cout << "An adult " << parent.get().name() << " gave birth to "
-            << parent.get().babies_per_birth() << " babies!\n";
-  std::vector<CAnimalRef> babies = zoo_.AnimalGiveBirth(parent);
-  for (const auto &b : babies)
-  {
-    if (!player_.FeedAnimal(b, food_type_, base_food_cost_))
-    {
-      std::cout << "You don't have enough money to feed your newborn "
-                << b.get().name() << "!\n";
+Option<GameTurnResult>
+GameTurn::PlayerBuyAnimal(AnimalSpecies s, unsigned qty) {
+  std::pair<bool, Option<std::vector<CAnimalRef>>> result =
+      player_.BuyAnimals(s, qty);
+  if (!result.first) return GameTurnResult::InsufficientFunds;
+
+  std::cout << "\nYou purchased " << qty << ' ' << AnimalSpeciesToString(s)
+            << "s!\n";
+
+  double food_cost = 0;
+  for (const auto &i : result.second.CUnwrapRef()) {
+    if (!player_.FeedAnimal(i.get(), food_type_, base_food_cost_)) {
+      std::cout << "You don't have enough money to feed your newly purchased "
+                << i.get().name() << "!\n";
       return GameTurnResult::PlayerBankrupt;
     }
+
+    food_cost = i.get().FoodCost(food_type_, base_food_cost_);
   }
 
-  double feeding_cost = parent.get().FoodCost(food_type_, base_food_cost_);
-  std::cout << "Successfully fed " << parent.get().babies_per_birth()
-            << " newborns; paid $" << feeding_cost << ".\n";
+  std::cout << "You paid $" << food_cost * qty << " to feed your "
+            << qty << " new " << AnimalSpeciesToString(s) << "s.\n";
+
+  if (animals_bought_.IsSome())
+    animals_bought_.UnwrapRef().second += qty;
+  else
+    animals_bought_ = std::make_pair(s, qty);
 
   return None;
 }
@@ -205,53 +210,10 @@ Option<GameTurnResult> GameTurn::SickAnimal(CAnimalRef sick_animal) {
   return None;
 }
 
-PlayerMainAction GameTurn::PromptPlayerMainMenu()
-{
-  MenuPrompt<PlayerMainAction> prompt;
-  prompt.AddOptions(AllMainActions());
-  if (!CanBuyAnimal()) prompt.RemoveOption(PlayerMainAction::BuyAnimal);
-  return prompt().Unwrap();
-}
-
-Option<std::pair<AnimalSpecies, unsigned>> GameTurn::PromptPlayerBuyAnimal()
-{
+Option<GameTurn::AnimalPurchase>
+GameTurn::BuildAnimalPurchase(AnimalSpecies s) const {
   if (!CanBuyAnimal()) return None;
 
-  std::ostringstream oss;
-  std::vector<AnimalSpecies> animal_options;
-  if (animals_bought_.IsSome())
-  {
-    const std::pair<AnimalSpecies, unsigned> &animals_bought =
-        animals_bought_.CUnwrapRef();
-    std::string animal_type =  AnimalSpeciesToString(animals_bought.first);
-    unsigned number_bought = animals_bought.second;
-    oss << "\nYou've already purchased " << number_bought << ' ' << animal_type
-        << " this turn, so the only thing you can buy is "
-        << MAX_ANIMAL_PURCHASES - number_bought << " more " << animal_type
-        << ".\n";
-
-    oss << "What would you like to do?";
-
-    animal_options.push_back(animals_bought.first);
-  }
-
-  if (animal_options.empty())
-    animal_options = AllSpecies();
-
-  MenuPrompt<AnimalSpecies> prompt(true);
-  prompt.AddOptions(animal_options);
-  Option<AnimalSpecies> p_species = prompt(oss.str());
-  if (p_species.IsNone()) return None;
-
-  AnimalSpecies species = p_species.Unwrap();
-  Option<unsigned> p_qty = PromptPlayerPurchaseQuantity(species);
-  if (p_qty.IsNone()) return None;
-  return std::make_pair(species, p_qty.Unwrap());
-}
-
-Option<unsigned> GameTurn::PromptPlayerPurchaseQuantity(AnimalSpecies s) const
-{
-  if (!CanBuyAnimal()) return None;
   std::string animal_type = AnimalSpeciesToString(s);
   std::cout << "\nHow many " << animal_type << "s would you like to buy?\n";
 
@@ -264,7 +226,9 @@ Option<unsigned> GameTurn::PromptPlayerPurchaseQuantity(AnimalSpecies s) const
 
   if (animals_bought_.IsSome()) prompt.RemoveOption(2);
   prompt.OverrideStrings(options_map);
-  return prompt();
+  return prompt().Map<AnimalPurchase>([s](unsigned qty) {
+      return std::make_pair(s, qty);
+  });
 }
 
 Option<GameTurn::AnimalPurchase> GameTurn::PromptPlayerBuyAnimal() {
@@ -291,13 +255,12 @@ Option<GameTurn::AnimalPurchase> GameTurn::PromptPlayerBuyAnimal() {
 
   if (animal_options.empty()) animal_options = AllSpecies();
 
+  using ABPair = std::pair<AnimalSpecies, unsigned>;
 
-bool GameTurn::CanBuyAnimal() const
-{
-  if (animals_bought_.IsNone()) return true;
-  const std::pair<AnimalSpecies, unsigned> &animals_bought =
-      animals_bought_.CUnwrapRef();
-  return animals_bought.second < MAX_ANIMAL_PURCHASES;
+  MenuPrompt<AnimalSpecies> prompt(true);
+  prompt.AddOptions(animal_options);
+  return prompt(prompt_msg).AndThen<AnimalPurchase>(
+      [&](AnimalSpecies s) { return BuildAnimalPurchase(s); });
 }
 
 FoodType GameTurn::PromptPlayerFoodType() const {
@@ -305,4 +268,17 @@ FoodType GameTurn::PromptPlayerFoodType() const {
   prompt.AddOptions(AllFoodOptions());
   std::cout << "\nWhat food would you like to feed your animals today?\n";
   return prompt().Unwrap();
+}
+
+PlayerMainAction GameTurn::PromptPlayerMainMenu() {
+  MenuPrompt<PlayerMainAction> prompt;
+  prompt.AddOptions(AllMainActions());
+  if (!CanBuyAnimal()) prompt.RemoveOption(PlayerMainAction::BuyAnimal);
+  return prompt().Unwrap();
+}
+
+bool GameTurn::CanBuyAnimal() const {
+  return animals_bought_.MapCRef<bool>([&](AnimalPurchase p) {
+      return p.second < MAX_ANIMAL_PURCHASES;
+  }).UnwrapOr(true);
 }

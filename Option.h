@@ -36,8 +36,19 @@ class Option {
     bool IsSome() const { return has_value_ && !moved_; };
 
     inline const T &CUnwrapRef() const;
+    inline const T &CUnwrapRefOr(const T &t) const;
     inline T Unwrap();
+    inline T UnwrapOr(T t);
     inline T &UnwrapRef() const;
+
+    template <class E>
+    Option<E> AndThen(std::function<Option<E>(T)> fn);
+
+    template <class E>
+    Option<E> Map(std::function<E(T)> fn);
+
+    template <class E>
+    Option<E> MapCRef(std::function<E(const T &)> fn) const;
 
     Option<T> &operator=(const Option<T> &rhs);
 
@@ -71,10 +82,23 @@ const T &Option<T>::CUnwrapRef() const {
 }
 
 template <class T>
+const T &Option<T>::CUnwrapRefOr(const T &t) const {
+  if (IsNone()) return t;
+  return CUnwrapRef();
+}
+
+template <class T>
 T Option<T>::Unwrap() {
   ThrowIfBad();
   moved_ = true;
   return std::move(value_);
+}
+
+template <class T>
+T Option<T>::UnwrapOr(T t)
+{
+  if (IsNone()) return t;
+  return Unwrap();
 }
 
 template <class T>
@@ -85,6 +109,28 @@ T &Option<T>::UnwrapRef() const {
   return const_cast<T &>(value_);
 }
 
+template <class T>
+template <class E>
+Option<E> Option<T>::AndThen(std::function<Option<E>(T)> fn) {
+  if (IsNone()) return None;
+  moved_ = true;
+  return fn(std::move(value_));
+}
+
+template <class T>
+template <class E>
+Option<E> Option<T>::Map(std::function<E(T)> fn) {
+  if (IsNone()) return None;
+  moved_ = true;
+  return fn(std::move(value_));
+};
+
+template <class T>
+template <class E>
+Option<E> Option<T>::MapCRef(std::function<E(const T &)> fn) const {
+  if (IsNone()) return None;
+  return fn(value_);
+};
 
 template <class T>
 void Option<T>::ThrowIfBad() const {

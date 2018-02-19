@@ -21,11 +21,12 @@ class Player {
       return bank_account_.CanAfford(amount); };
     double MoneyRemaining() const { return bank_account_.balance(); }
 
-    bool BuyAnimals(AnimalSpecies s, unsigned qty, bool adults = true);
-    bool BuyAnimal(AnimalSpecies s, bool adult = true);
-
     void AddMoney(double amount, const std::string &desc) {
       bank_account_.Deposit(amount, desc); };
+    std::pair<bool, Option<CAnimalRef>>
+        BuyAnimal(AnimalSpecies s, bool adult = true);
+    std::pair<bool, Option<std::vector<CAnimalRef>>>
+        BuyAnimals(AnimalSpecies s, unsigned qty, bool adults = true);
     bool CareForSickAnimal(const Animal &animal);
     bool FeedAnimal(const Animal &animal, FoodType t, double base_food_cost);
     bool FeedAnimals(FoodType t, double base_cost);
