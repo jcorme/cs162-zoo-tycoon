@@ -1,15 +1,11 @@
+#include <iterator>
 #include <random>
 #include "Utils.h"
 
-std::vector<uint32_t> GenerateSeedData(unsigned n_uints) {
-  std::vector<uint32_t> seed_data(n_uints);
-  std::random_device r;
-  std::generate(seed_data.begin(), seed_data.end(), std::ref(r));
-  return seed_data;
-}
-
 std::mt19937 MakeRngEngine() {
-  std::vector<uint32_t> seed_data = GenerateSeedData();
-  std::seed_seq seed(seed_data.begin(), seed_data.end());
+  std::mt19937::result_type seed_data[std::mt19937::state_size];
+  std::random_device r;
+  std::generate(std::begin(seed_data), std::end(seed_data), std::ref(r));
+  std::seed_seq seed(std::begin(seed_data), std::end(seed_data));
   return std::mt19937(seed);
 }

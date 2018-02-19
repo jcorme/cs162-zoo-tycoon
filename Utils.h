@@ -18,7 +18,6 @@ using InputValidationFn = std::function<bool(const T &)>;
 // Default amount of seed data to generate for RNG.
 const int MT19937_MAX_UINTS = 624;
 
-std::vector<uint32_t> GenerateSeedData(unsigned n_uints = MT19937_MAX_UINTS);
 std::mt19937 MakeRngEngine();
 
 // Avoids need for hash specialization,
