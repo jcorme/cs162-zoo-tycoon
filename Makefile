@@ -1,5 +1,5 @@
 CC=g++
-CXXFLAGS=-Wall -std=c++0x
+CXXFLAGS=-Wall -std=c++0x -O2
 EXE_FILE=ZooTycoon
 
 objects:=$(patsubst %.cpp,%.o,$(wildcard *.cpp))
