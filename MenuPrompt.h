@@ -141,7 +141,7 @@ template <class T>
 void MenuPrompt<T>::SortOptions()
 {
   std::sort(options_.begin(), options_.end(), [](const T &t1, const T &t2) {
-      return static_cast<unsigned>(t1) < static_cast<unsigned>(t2);
+      return t1 < t2;
   });
 }
 
