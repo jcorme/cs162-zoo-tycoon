@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_ZOO_H
 #define ZOO_TYCOON_ZOO_H
+/*********************************************************************
+** Program Filename: Zoo.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Zoo class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <utility>

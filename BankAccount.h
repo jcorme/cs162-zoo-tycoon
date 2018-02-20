@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_BANKACCOUNT_H
 #define ZOO_TYCOON_BANKACCOUNT_H
+/*********************************************************************
+** Program Filename: BankAccount.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the BankAccount class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <string>

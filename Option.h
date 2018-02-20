@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_OPTION_H
 #define ZOO_TYCOON_OPTION_H
+/*********************************************************************
+** Program Filename: Option.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Option class and its related members.
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <functional>
@@ -7,6 +15,8 @@
 #include <utility>
 #include <exception>
 
+// This is the exception thrown when an Option that is None or whose value has
+// been moved is unwrapped.
 class BadOptionAccess: public std::exception {
   public:
     explicit BadOptionAccess(const char *msg): msg_(msg) {}
@@ -16,9 +26,15 @@ class BadOptionAccess: public std::exception {
     const char *msg_;
 };
 
+// The None value of None type allows easy construction of empty Option
+// objects.
 struct None {};
 constexpr None None{};
 
+// Option<T> represents an optional value (a value that may or may not exist).
+// If the state of an option is Some, then it holds a value; if the state is
+// None, then it does not hold a value. This type is used as the return type
+// for functions that may fail to return a value.
 template <class T>
 class Option {
   public:
@@ -65,29 +81,69 @@ class Option {
     inline void ThrowIfBad() const;
 };
 
+/*********************************************************************
+** Function: Option
+** Description: Copy constructor for the Option class template.
+** Parameters: t is the Option<T> being copied.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 Option<T>::Option(const Option<T> &t) {
   *this = t;
 }
 
+/*********************************************************************
+** Function: ~Option
+** Description: Destructor for the Option class template.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 Option<T>::~Option() {
   if (IsSome())
     value_.~T();
 }
 
+/*********************************************************************
+** Function: CUnwrapRef
+** Description: Returns a const reference to the value inside the optional,
+ * PROVIDED IT EXISTS. This function will throw an exception if the value
+ * has been moved or doesn't exist.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 const T &Option<T>::CUnwrapRef() const {
   ThrowIfBad();
   return value_;
 }
 
+/*********************************************************************
+** Function: CUnwrapRefOr
+** Description: Returns a reference to the value inside the optional if
+ * it exists; otherwise, returns the argument.
+** Parameters: t is the default value to return if the optional is None.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 const T &Option<T>::CUnwrapRefOr(const T &t) const {
   if (IsNone()) return t;
   return CUnwrapRef();
 }
 
+/*********************************************************************
+** Function: Unwrap
+** Description: Moves (returns) the value held by the optional if it exists;
+ * this function will throw an exception if the value has already been
+ * moved or no value exists.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 T Option<T>::Unwrap() {
   ThrowIfBad();
@@ -95,6 +151,14 @@ T Option<T>::Unwrap() {
   return std::move(value_);
 }
 
+/*********************************************************************
+** Function: UnwrapOr
+** Description: Moves (returns) the value held by the optional if it exists;
+ * otherwise, returns the argument.
+** Parameters: t is the default value to return if the optional is None.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 T Option<T>::UnwrapOr(T t)
 {
@@ -102,6 +166,15 @@ T Option<T>::UnwrapOr(T t)
   return Unwrap();
 }
 
+/*********************************************************************
+** Function: UnwrapRef
+** Description: Returns a reference to the value inside the optional,
+ * PROVIDED IT EXISTS. This function will throw an exception if the value
+ * has been moved or doesn't exist.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 T &Option<T>::UnwrapRef() const {
   ThrowIfBad();
@@ -110,6 +183,15 @@ T &Option<T>::UnwrapRef() const {
   return const_cast<T &>(value_);
 }
 
+/*********************************************************************
+** Function: AndThen
+** Description: Transforms an Option<T> to an Option<E> by using the given
+ * function (T -> Option<E>) to transform a T into Option<E>; returns None
+ * if no value exists; moves the value if it does exist.
+** Parameters: f is a function (T -> Option<E>).
+** Pre-Conditions:
+** Post-Conditions:
+*********************************************************************/
 template <class T>
 template <class E>
 Option<E> Option<T>::AndThen(std::function<Option<E>(T)> f) {
@@ -118,6 +200,15 @@ Option<E> Option<T>::AndThen(std::function<Option<E>(T)> f) {
   return f(std::move(value_));
 }
 
+/*********************************************************************
+** Function: Map
+** Description: Transforms an Option<T> to an Option<E> by using the given
+ * function (T -> E) to map T to E; returns None if no value exists; moves
+ * the value if it does exist.
+** Parameters: f is a function (T -> E).
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 template <class E>
 Option<E> Option<T>::Map(std::function<E(T)> f) {
@@ -126,6 +217,15 @@ Option<E> Option<T>::Map(std::function<E(T)> f) {
   return f(std::move(value_));
 };
 
+/*********************************************************************
+** Function: MapCRef
+** Description: Transforms an Option<T> to an Option<E> by using the given
+ * function (T -> E) to map T to E; returns None if no value exists; does not
+ * move the value in any case.
+** Parameters: f is a function (T -> E).
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 template <class E>
 Option<E> Option<T>::MapCRef(std::function<E(const T &)> f) const {
@@ -133,6 +233,14 @@ Option<E> Option<T>::MapCRef(std::function<E(const T &)> f) const {
   return f(value_);
 };
 
+/*********************************************************************
+** Function: ThrowIfBad
+** Description: Throws an exception if called and the value has been moved
+ * or no value exists.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 void Option<T>::ThrowIfBad() const {
   if (moved_)
@@ -142,6 +250,14 @@ void Option<T>::ThrowIfBad() const {
     throw BadOptionAccess("Cannot unwrap an Option that is None.");
 }
 
+/*********************************************************************
+** Function: operator=
+** Description: Overloads the assignment operator for implement safe copying
+ * of Option classes.
+** Parameters: rhs is the Option<T> being copied.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 Option<T> &Option<T>::operator=(const Option<T> &rhs) {
   has_value_ = rhs.has_value_;
@@ -158,6 +274,13 @@ Option<T> &Option<T>::operator=(const Option<T> &rhs) {
   return *this;
 }
 
+/*********************************************************************
+** Function: operator<<
+** Description: Overloads the insertion operator to print Option<T> values.
+** Parameters: os is the output_stream; possible_t is the Option<T> to print.
+** Pre-Conditions:  None
+** Post-Conditions: None
+*********************************************************************/
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const Option<T> &possible_t) {
   if (possible_t.IsNone())

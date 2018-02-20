@@ -1,5 +1,14 @@
 #ifndef ZOO_TYCOON_MENUPROMPT_H
 #define ZOO_TYCOON_MENUPROMPT_H
+/*********************************************************************
+** Program Filename: MenuPrompt.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the MenuPrompt template class and its related
+ * members.
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <algorithm>
@@ -11,6 +20,15 @@
 #include "Option.h"
 #include "Utils.h"
 
+// MenuPrompt is a (kind of) generic interface for getting input from the
+// user. It takes a list of enum values, all of which must be of the same type,
+// and asks the user to select one of them by entering in a number.
+// The numbers are sequential, beginning from 1, increasing by one until
+// there are no more options.
+// There are two restrictions on T:
+//    1. T must implement the comparison operators.
+//    2. T must have an ActionString specialization, with a corresponding
+//       Strings member map.
 template <class T>
 class MenuPrompt {
   // This doesn't actually work. There's no clean/sane way to check that
@@ -28,6 +46,8 @@ class MenuPrompt {
     using ValidationFn = std::function<bool(T)>;
 
     MenuPrompt() = default;
+    // enable_cancel is whether there should be an extra option (0) that allows
+    // the user to exit the current menu.
     explicit MenuPrompt(bool enable_cancel): enable_cancel_(enable_cancel) {}
     MenuPrompt(std::initializer_list<T> options);
 
@@ -43,9 +63,11 @@ class MenuPrompt {
 
   private:
     std::vector<T> options_;
+    // Overrides the default printed option text.
     ActionStringMap<T> override_map_;
     bool enable_cancel_ = false;
 
+    // Overrides the default function that validates user input.
     Option<ValidationFn> custom_validation_fn_;
 
     void SortOptions();
@@ -56,29 +78,65 @@ class MenuPrompt {
     const std::string &StringFor(T option) const;
 };
 
+/*********************************************************************
+** Function: MenuPrompt
+** Description: Constructor for the MenuPrompt template class.
+** Parameters: options is a list of options to give to the user.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 MenuPrompt<T>::MenuPrompt(std::initializer_list<T> options) {
   for (const auto &o : options)
     options_.push_back(o);
 }
 
+/*********************************************************************
+** Function: AddOptions
+** Description: Adds the options from the vector to print to the user.
+** Parameters: options to add.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 void MenuPrompt<T>::AddOptions(std::vector<T> options) {
   for (const auto &o : options)
     AddOption(o);
 }
 
+/*********************************************************************
+** Function: OverrideStrings
+** Description: Overrides some, or all, of the default printed option text.
+** Parameters: overrides is the map of overrides.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 void MenuPrompt<T>::OverrideStrings(ActionStringMap<T> overrides) {
   override_map_ = overrides;
 }
 
+/*********************************************************************
+** Function: RemoveOption
+** Description: Remove the provided option from the options printed to the user.
+** Parameters: option is the option to remove.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 void MenuPrompt<T>::RemoveOption(T option) {
   options_.erase(
       std::remove(options_.begin(), options_.end(), option), options_.end());
 }
 
+/*********************************************************************
+** Function: SortOptions
+** Description: Sorts the provided options from least to greatest, however
+ * that may be defined by the type.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 void MenuPrompt<T>::SortOptions()
 {
@@ -87,17 +145,39 @@ void MenuPrompt<T>::SortOptions()
   });
 }
 
+/*********************************************************************
+** Function: EraseDuplicateOptions
+** Description: Removes duplicate options.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 void MenuPrompt<T>::EraseDuplicateOptions() {
   auto fwd_it = std::unique(options_.begin(), options_.end());
   options_.erase(fwd_it, options_.end());
 }
 
+/*********************************************************************
+** Function: DefaultStringFor
+** Description: Retrieves the default option text for the given option.
+** Parameters: option is the option to retrieve the text for.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 const std::string &MenuPrompt<T>::DefaultStringFor(T option) const {
   return ActionString<T>::Strings.at(option);
 }
 
+/*********************************************************************
+** Function: OptionsAsString
+** Description: Converts the given options into a string presentable to
+ * the user.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 std::string MenuPrompt<T>::OptionsAsString() const {
   std::ostringstream oss;
@@ -111,6 +191,14 @@ std::string MenuPrompt<T>::OptionsAsString() const {
   return oss.str();
 }
 
+/*********************************************************************
+** Function: StringFor
+** Description: Provides the option text for the given option, checking
+ * first if it has been overriden and returning the default text if not.
+** Parameters: optoin is the option to retrieve the text for.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 const std::string &MenuPrompt<T>::StringFor(T option) const {
   if (override_map_.empty()) return DefaultStringFor(option);
@@ -122,6 +210,14 @@ const std::string &MenuPrompt<T>::StringFor(T option) const {
   return DefaultStringFor(option);
 }
 
+/*********************************************************************
+** Function: operator()
+** Description: Overloads the function call operator; this prompts the
+ * user with the given options and returns their choice.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 Option<T> MenuPrompt<T>::operator()(
     Option<std::string> prompt_msg, Option<std::string> fail_msg) {

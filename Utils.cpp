@@ -1,7 +1,22 @@
+/*********************************************************************
+** Program Filename: Utils.cpp
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Implements functions declared in the Utils header. 
+** Input: None
+** Output: None
+*********************************************************************/
 #include <iterator>
 #include <random>
 #include "Utils.h"
 
+/*********************************************************************
+** Function: MakeRngEngine
+** Description: Creates a 32-bit Mersenne Twister RNG.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 std::mt19937 MakeRngEngine() {
   std::mt19937::result_type seed_data[std::mt19937::state_size];
   std::random_device r;

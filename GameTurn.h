@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_GAMETURN_H
 #define ZOO_TYCOON_GAMETURN_H
+/*********************************************************************
+** Program Filename: GameTurn.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the GameTurn class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <map>
@@ -33,9 +41,13 @@ class GameTurn {
 
     GameTurn(Player &player, double base_food_cost);
 
+    // The current day of the game.
     static unsigned day_;
+    // The type of food to feed the animals this turn.
     static FoodType food_type_;
 
+    // Keeps track of what, if any, and how many animals the player has
+    // purchased this turn.
     Option<AnimalPurchase> animals_bought_ = None;
     Player &player_;
     Zoo &zoo_;

@@ -1,3 +1,11 @@
+/*********************************************************************
+** Program Filename: ZooTycoon.cpp
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Runs the Zoo Tycoon game. 
+** Input: None
+** Output: None
+*********************************************************************/
 #include <iostream>
 #include "Game.h"
 

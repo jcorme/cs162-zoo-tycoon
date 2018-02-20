@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_ELEPHANT_H
 #define ZOO_TYCOON_ELEPHANT_H
+/*********************************************************************
+** Program Filename: Elephant.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Elephant class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include "Animal.h"

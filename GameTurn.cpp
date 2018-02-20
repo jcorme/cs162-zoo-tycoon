@@ -1,3 +1,12 @@
+/*********************************************************************
+** Program Filename: GameTurn.cpp
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Implements functions and members declared by the GameTurn
+ * class and in the GameTurn header.
+** Input: None
+** Output: None
+*********************************************************************/
 #include <iostream>
 #include "GameTurn.h"
 #include "MenuPrompt.h"
@@ -5,6 +14,14 @@
 unsigned GameTurn::day_ = 0;
 FoodType GameTurn::food_type_ = FoodType::Regular;
 
+/*********************************************************************
+** Function: GameTurn
+** Description: Constructor for the GameTurn class.
+** Parameters: player is the player of the current game; base_food_cost
+ * is the base cost of animal food for the turn.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 GameTurn::GameTurn(Player &player, double base_food_cost):
     player_(player), zoo_(player.zoo()),
     special_event_(SpecialEvent(player.zoo(), food_type_)),
@@ -14,6 +31,17 @@ GameTurn::GameTurn(Player &player, double base_food_cost):
   ++day_;
 }
 
+/*********************************************************************
+** Function: Run
+** Description: Carries out of the flow of each turn; from incrementing
+ * the animals' ages to feeding them to giving the player the daily revenue,
+ * this function handles the entire turn. It initiates an infinite loop
+ * that prompts the player to select from a variety of menu options until
+ * they either go bankrupt or choose to end the turn.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 GameTurnResult GameTurn::Run() {
   zoo_.IncrementAnimalAges();
   PrintGameState();
@@ -50,6 +78,14 @@ GameTurnResult GameTurn::Run() {
   return GameTurnResult::Continue;
 }
 
+/*********************************************************************
+** Function: PrintGameState
+** Description: Prints the current state of the game, including player
+ * bank balance and the number of animals in their zoo.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 void GameTurn::PrintGameState() const {
   using Map = std::unordered_map<std::string, std::pair<unsigned, unsigned>>;
 
@@ -67,6 +103,14 @@ void GameTurn::PrintGameState() const {
   std::cout << '\n' << std::endl;
 }
 
+/*********************************************************************
+** Function: AnimalBirth
+** Description: Handles an animal birth event, which entails telling the
+ * zoo that an animal should give birth and making sure the babies are fed.
+** Parameters: parent is the animal that is giving birth.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurnResult> GameTurn::AnimalBirth(CAnimalRef parent) {
   std::cout << "An adult " << parent.get().name() << " gave birth to "
             << parent.get().babies_per_birth() << " babies!\n";
@@ -88,6 +132,14 @@ Option<GameTurnResult> GameTurn::AnimalBirth(CAnimalRef parent) {
   return None;
 }
 
+/*********************************************************************
+** Function: FeedAnimals
+** Description: Handles feeding all the animals at the beginning of the
+ * turn, ensuring the player has sufficient funds to do so.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurnResult> GameTurn::FeedAnimals() {
   if (!player_.FeedAnimals(food_type_, base_food_cost_))
     return GameTurnResult::PlayerBankrupt;
@@ -100,6 +152,14 @@ Option<GameTurnResult> GameTurn::FeedAnimals() {
   return None;
 }
 
+/*********************************************************************
+** Function: GivePlayerRevenue
+** Description: Collects the daily revenue from the zoo and adds it to
+ * the player's bank account.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 void GameTurn::GivePlayerRevenue() {
   std::string n_animals = std::to_string(zoo_.NumberOfAnimals());
   std::string desc = "Daily zoo revenue from " + n_animals + " animals";
@@ -111,6 +171,14 @@ void GameTurn::GivePlayerRevenue() {
             << "bank balance to $" << player_.MoneyRemaining() << ".\n";
 }
 
+/*********************************************************************
+** Function: HandleSpecialEvent
+** Description: Handles any special events that may exist for the turn,
+ * which include an animal birth and an animal getting sick.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurnResult> GameTurn::HandleSpecialEvent() {
   switch (special_event_.type()) {
     case SpecialEventType::AnimalBirth:
@@ -132,6 +200,14 @@ Option<GameTurnResult> GameTurn::HandleSpecialEvent() {
   }
 }
 
+/*********************************************************************
+** Function: HandleMainAction
+** Description: Handles the main player menu; checks their choice and
+ * carries out the appropriate actions.
+** Parameters: action is the action the player would like to take.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action) {
   switch (action) {
     case PlayerMainAction::BuyAnimal:
@@ -163,6 +239,13 @@ Option<GameTurnResult> GameTurn::HandleMainAction(PlayerMainAction action) {
   return None;
 }
 
+/*********************************************************************
+** Function: PlayerBuyAnimal
+** Description: Handles a player buying a qty number of animals.
+** Parameters: s is the species they want to buy; qty is the quantity.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurnResult>
 GameTurn::PlayerBuyAnimal(AnimalSpecies s, unsigned qty) {
   std::pair<bool, Option<std::vector<CAnimalRef>>> result =
@@ -194,6 +277,14 @@ GameTurn::PlayerBuyAnimal(AnimalSpecies s, unsigned qty) {
   return None;
 }
 
+/*********************************************************************
+** Function: SickAnimal
+** Description: Handles a sick animal event, making sure the player can
+ * afford to care for the sick animal.
+** Parameters: sick_animal is the animal that is sick.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurnResult> GameTurn::SickAnimal(CAnimalRef sick_animal) {
   std::cout << "A " << sick_animal.get().name() << " fell sick!\n";
 
@@ -210,6 +301,15 @@ Option<GameTurnResult> GameTurn::SickAnimal(CAnimalRef sick_animal) {
   return None;
 }
 
+/*********************************************************************
+** Function: BuildAnimalPurchase
+** Description: Takes the species the player wants to buy and prompts
+ * them for the quantity, building a transaction with species and
+ * quantity.
+** Parameters: s is the species the player wants to purchase.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurn::AnimalPurchase>
 GameTurn::BuildAnimalPurchase(AnimalSpecies s) const {
   if (!CanBuyAnimal()) return None;
@@ -231,6 +331,14 @@ GameTurn::BuildAnimalPurchase(AnimalSpecies s) const {
   });
 }
 
+/*********************************************************************
+** Function: PromptPlayerBuyAnimal
+** Description: Asks the player which species they would like to purchase,
+ * then how many they want to buy.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 Option<GameTurn::AnimalPurchase> GameTurn::PromptPlayerBuyAnimal() {
   if (!CanBuyAnimal()) return None;
 
@@ -261,6 +369,14 @@ Option<GameTurn::AnimalPurchase> GameTurn::PromptPlayerBuyAnimal() {
       [&](AnimalSpecies s) { return BuildAnimalPurchase(s); });
 }
 
+/*********************************************************************
+** Function: PromptPlayerFoodType
+** Description: Asks the player what food type they want to feed their
+ * animals this turn.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 FoodType GameTurn::PromptPlayerFoodType() const {
   MenuPrompt<FoodType> prompt;
   prompt.AddOptions(AllFoodOptions());
@@ -268,6 +384,13 @@ FoodType GameTurn::PromptPlayerFoodType() const {
   return prompt().Unwrap();
 }
 
+/*********************************************************************
+** Function: PromptPlayerMainMenu
+** Description: Prompts the player with the main action menu.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 PlayerMainAction GameTurn::PromptPlayerMainMenu() {
   MenuPrompt<PlayerMainAction> prompt;
   prompt.AddOptions(AllMainActions());
@@ -275,6 +398,14 @@ PlayerMainAction GameTurn::PromptPlayerMainMenu() {
   return prompt().Unwrap();
 }
 
+/*********************************************************************
+** Function: CanBuyAnimal
+** Description: Returns whether the player has exhausted their purchase
+ * quota for the turn.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 bool GameTurn::CanBuyAnimal() const {
   return animals_bought_.MapCRef<bool>([&](AnimalPurchase p) {
       return p.second < MAX_ANIMAL_PURCHASES;

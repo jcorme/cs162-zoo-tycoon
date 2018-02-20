@@ -1,5 +1,13 @@
 #ifndef ZOOTYCOON_BANKACCOUNTTRANSACTION_H
 #define ZOOTYCOON_BANKACCOUNTTRANSACTION_H
+/*********************************************************************
+** Program Filename: BankAccountTransaction.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the BankAccountTransaction class and its members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <string>

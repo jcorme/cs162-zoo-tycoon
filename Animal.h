@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_ANIMAL_H
 #define ZOO_TYCOON_ANIMAL_H
+/*********************************************************************
+** Program Filename: Animal.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Animal class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <vector>
@@ -41,6 +49,7 @@ class Animal {
     virtual AnimalsVec GiveBirth() const = 0;
 
   private:
+    // Name (right now) is just the species name.
     std::string name_;
 
     unsigned age_;
@@ -54,10 +63,25 @@ class Animal {
 
 bool operator==(const Animal &lhs, const Animal &rhs);
 
+/*********************************************************************
+** Function: IsAdult
+** Description: Returns whether the animal is an adult.
+** Parameters: None
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 bool Animal::IsAdult() const {
   return (static_cast<double>(age_) / 365) >= 3;
 }
 
+/*********************************************************************
+** Function: AnimalGiveBirth
+** Description: Template function that dynamically allocates (possibly
+ * more than one) Animal subclass.
+** Parameters: animal is the parent animal giving birth.
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
 template <class T>
 AnimalsVec AnimalGiveBirth(const Animal *animal) {
   AnimalsVec babies;

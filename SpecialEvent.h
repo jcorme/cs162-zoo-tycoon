@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_SPECIALEVENT_H
 #define ZOO_TYCOON_SPECIALEVENT_H
+/*********************************************************************
+** Program Filename: SpecialEvent.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the SpecialEvent class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include "Utils.h"

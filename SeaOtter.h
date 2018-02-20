@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_SEAOTTER_H
 #define ZOO_TYCOON_SEAOTTER_H
+/*********************************************************************
+** Program Filename: SeaOtter.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the SeaOtter class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include "Animal.h"

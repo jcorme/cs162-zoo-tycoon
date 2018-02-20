@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_PLAYER_H
 #define ZOO_TYCOON_PLAYER_H
+/*********************************************************************
+** Program Filename: Player.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Player class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include "Zoo.h"

@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_MONKEY_H
 #define ZOO_TYCOON_MONKEY_H
+/*********************************************************************
+** Program Filename: Monkey.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Monkey class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include "Animal.h"

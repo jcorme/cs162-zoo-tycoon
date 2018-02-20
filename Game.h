@@ -1,5 +1,13 @@
 #ifndef ZOO_TYCOON_GAME_H
 #define ZOO_TYCOON_GAME_H
+/*********************************************************************
+** Program Filename: Game.h
+** Author: Jason Chen
+** Date: 02/19/2018
+** Description: Declares the Game class and its related members. 
+** Input: None
+** Output: None
+*********************************************************************/
 
 
 #include <map>
