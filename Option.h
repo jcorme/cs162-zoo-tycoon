@@ -43,13 +43,13 @@ class Option {
     inline T &UnwrapRef() const;
 
     template <class E>
-    Option<E> AndThen(std::function<Option<E>(T)> fn);
+    Option<E> AndThen(std::function<Option<E>(T)> f);
 
     template <class E>
-    Option<E> Map(std::function<E(T)> fn);
+    Option<E> Map(std::function<E(T)> f);
 
     template <class E>
-    Option<E> MapCRef(std::function<E(const T &)> fn) const;
+    Option<E> MapCRef(std::function<E(const T &)> f) const;
 
     Option<T> &operator=(const Option<T> &rhs);
 
@@ -112,25 +112,25 @@ T &Option<T>::UnwrapRef() const {
 
 template <class T>
 template <class E>
-Option<E> Option<T>::AndThen(std::function<Option<E>(T)> fn) {
+Option<E> Option<T>::AndThen(std::function<Option<E>(T)> f) {
   if (IsNone()) return None;
   moved_ = true;
-  return fn(std::move(value_));
+  return f(std::move(value_));
 }
 
 template <class T>
 template <class E>
-Option<E> Option<T>::Map(std::function<E(T)> fn) {
+Option<E> Option<T>::Map(std::function<E(T)> f) {
   if (IsNone()) return None;
   moved_ = true;
-  return fn(std::move(value_));
+  return f(std::move(value_));
 };
 
 template <class T>
 template <class E>
-Option<E> Option<T>::MapCRef(std::function<E(const T &)> fn) const {
+Option<E> Option<T>::MapCRef(std::function<E(const T &)> f) const {
   if (IsNone()) return None;
-  return fn(value_);
+  return f(value_);
 };
 
 template <class T>
