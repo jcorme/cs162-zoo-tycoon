@@ -59,9 +59,9 @@ SpecialEvent::SpecialEvent(const SpecialEvent &s):
     zoo_(s.zoo_), type_(s.type_) {
   switch (s.type_) {
     case SpecialEventType::SickAnimal:
-      sick_animal_ = s.sick_animal_;
+      new (&sick_animal_) Option<CAnimalRef>(s.sick_animal_);
     case SpecialEventType::AnimalBirth:
-      animal_birth_ = s.animal_birth_;
+      new (&animal_birth_) Option<CAnimalRef>(s.animal_birth_);
     case SpecialEventType::ZooAttendanceBoom:
       monkey_bonus_revenue_ = s.monkey_bonus_revenue_;
     default: break;
@@ -249,10 +249,10 @@ Option<CAnimalRef> SpecialEvent::RandomSickAnimal() {
 void SpecialEvent::SetValueBasedOnEvent() {
   switch (type_) {
     case SpecialEventType::SickAnimal:
-      sick_animal_ = RandomSickAnimal();
+      new (&sick_animal_) Option<CAnimalRef>(RandomSickAnimal());
       break;
     case SpecialEventType::AnimalBirth:
-      animal_birth_ = RandomAdultAnimal();
+      new (&animal_birth_) Option<CAnimalRef>(RandomAdultAnimal());
       break;
     case SpecialEventType::ZooAttendanceBoom:
       monkey_bonus_revenue_ = RandomBonusRevenue();

@@ -42,6 +42,7 @@ class Option {
     Option(const T &t): has_value_(true), moved_(false), value_(t) {}
     Option(T &&t): has_value_(true), moved_(false), value_(std::move(t)) {}
     Option(const Option<T> &t);
+    Option(Option<T> &&t) noexcept;
     Option(const struct None &):
         has_value_(false), moved_(false), stub_(nullptr) {}
 
@@ -89,8 +90,30 @@ class Option {
 ** Post-Conditions: None
 *********************************************************************/
 template <class T>
-Option<T>::Option(const Option<T> &t) {
-  *this = t;
+Option<T>::Option(const Option<T> &t):
+    has_value_(false), moved_(false), stub_(nullptr) {
+  has_value_ = t.has_value_;
+  moved_ = t.moved_;
+
+  if (t.IsSome())
+    new (&value_) T(t.value_);
+  else
+    stub_ = nullptr;
+}
+
+/*********************************************************************
+** Function: Option
+** Description: Move constructor for the Option class template.
+** Parameters: t is an rvalue reference (to the Option<T> being moved).
+** Pre-Conditions: None
+** Post-Conditions: None
+*********************************************************************/
+template <class T>
+Option<T>::Option(Option<T> &&t) noexcept:
+    has_value_(std::move(t.has_value_)), moved_(std::move(t.moved_)),
+    stub_(nullptr) {
+  if (t.IsSome())
+    new (&value_) T(std::move(t.value_));
 }
 
 /*********************************************************************
@@ -260,14 +283,14 @@ void Option<T>::ThrowIfBad() const {
 *********************************************************************/
 template <class T>
 Option<T> &Option<T>::operator=(const Option<T> &rhs) {
-  has_value_ = rhs.has_value_;
-  moved_ = rhs.moved_;
-
   if (IsSome())
     value_.~T();
 
+  has_value_ = rhs.has_value_;
+  moved_ = rhs.moved_;
+
   if (rhs.IsSome())
-    value_ = rhs.value_;
+    new (&value_) T(rhs.value_);
   else
     stub_ = nullptr;
 
