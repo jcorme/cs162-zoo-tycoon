@@ -23,7 +23,6 @@ static constexpr unsigned MAX_ANIMAL_PURCHASES = 2;
 enum class GameTurnResult {
   Continue,
   InsufficientFunds,
-  MissingAnimals,
   PlayerBankrupt,
   Quit
 };
